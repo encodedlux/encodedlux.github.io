@@ -1,4 +1,4 @@
-﻿// ─── FILTER TABS ───
+// ─── FILTER TABS ───
 const tabs = document.querySelectorAll('.tab');
 const entries = document.querySelectorAll('.entry');
 const grid = document.getElementById('worksGrid');
@@ -60,3 +60,104 @@ document.querySelectorAll('.pc-media img').forEach(img => {
   img.addEventListener('error', show);
   if (!img.getAttribute('src') || img.getAttribute('src') === '') show();
 });
+
+// ─── LIVE STATS MONITOR ───
+function formatCount(num) {
+  if (num >= 1000000) {
+    const formatted = (num / 1000000).toFixed(1);
+    return formatted.endsWith('.0') ? (num / 1000000).toFixed(0) + 'M' : formatted + 'M';
+  }
+  if (num >= 10000) {
+    const formatted = (num / 1000).toFixed(1);
+    return formatted.endsWith('.0') ? (num / 1000).toFixed(0) + 'K' : formatted + 'K';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
+
+function animateValue(el, start, end, duration = 800, isSuffix = true) {
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(ease * (end - start) + start);
+    el.textContent = isSuffix ? formatCount(current) : current.toLocaleString();
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.textContent = isSuffix ? formatCount(end) : end.toLocaleString();
+    }
+  };
+  window.requestAnimationFrame(step);
+}
+
+async function updateLiveStats() {
+  const badges = document.querySelectorAll('.pc-badge[data-type]');
+  
+  // 1. Initial animated counter on page load
+  badges.forEach(badge => {
+    const valEl = badge.querySelector('.live-val');
+    const targetVal = parseInt(badge.dataset.value, 10);
+    if (!valEl || isNaN(targetVal)) return;
+    animateValue(valEl, 0, targetVal, 950, badge.dataset.type === 'roblox');
+  });
+
+  // 2. Fetch live GitHub stars directly
+  const ghBadges = document.querySelectorAll('.pc-badge[data-type="github"]');
+  ghBadges.forEach(async (badge) => {
+    const repo = badge.dataset.repo;
+    if (!repo) return;
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repo}`);
+      if (res.ok) {
+        const data = await res.json();
+        const stars = data.stargazers_count;
+        const valEl = badge.querySelector('.live-val');
+        if (valEl && stars !== undefined) {
+          badge.dataset.value = stars;
+          valEl.textContent = stars.toLocaleString();
+          badge.setAttribute('title', `${stars} stars on GitHub • Live sync`);
+        }
+      }
+    } catch (e) {
+      // Verified baseline remains active
+    }
+  });
+
+  // 3. Fetch live Roblox visits (via CORS proxy)
+  const robloxBadges = document.querySelectorAll('.pc-badge[data-type="roblox"]');
+  const universeIds = Array.from(robloxBadges).map(b => b.dataset.universe).filter(Boolean);
+  
+  if (universeIds.length > 0) {
+    try {
+      const apiUrl = `https://games.roblox.com/v1/games?universeIds=${universeIds.join(',')}`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.data)) {
+          json.data.forEach(game => {
+            const badge = document.querySelector(`.pc-badge[data-universe="${game.id}"]`);
+            if (badge && game.visits !== undefined) {
+              badge.dataset.value = game.visits;
+              const valEl = badge.querySelector('.live-val');
+              if (valEl) valEl.textContent = formatCount(game.visits);
+              badge.setAttribute('title', `${game.visits.toLocaleString()} total visits • Live sync`);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      // Verified real numbers remain active
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateLiveStats);
+} else {
+  updateLiveStats();
+}
