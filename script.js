@@ -63,16 +63,16 @@ document.querySelectorAll('.pc-media img').forEach(img => {
 
 // ─── LIVE STATS MONITOR ───
 function formatCount(num) {
-  if (num >= 1000000) {
-    const formatted = (num / 1000000).toFixed(1);
-    return formatted.endsWith('.0') ? (num / 1000000).toFixed(0) + 'M' : formatted + 'M';
+  if (num >= 10000000) {
+    return (num / 1000000).toFixed(1) + 'M';
   }
-  if (num >= 10000) {
-    const formatted = (num / 1000).toFixed(1);
-    return formatted.endsWith('.0') ? (num / 1000).toFixed(0) + 'K' : formatted + 'K';
+  if (num >= 1000000) {
+    const formatted = (num / 1000000).toFixed(2);
+    return formatted.endsWith('0') ? (num / 1000000).toFixed(1) + 'M' : formatted + 'M';
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    const formatted = (num / 1000).toFixed(1);
+    return formatted.endsWith('.0') ? (num / 1000).toFixed(0) + 'K' : formatted + 'K';
   }
   return num.toString();
 }
@@ -95,31 +95,31 @@ function animateValue(el, start, end, duration = 800, isSuffix = true) {
 }
 
 async function updateLiveStats() {
-  const badges = document.querySelectorAll('.pc-badge[data-type]');
+  const stats = document.querySelectorAll('.pc-stat[data-type]');
   
   // 1. Initial animated counter on page load
-  badges.forEach(badge => {
-    const valEl = badge.querySelector('.live-val');
-    const targetVal = parseInt(badge.dataset.value, 10);
+  stats.forEach(stat => {
+    const valEl = stat.querySelector('.live-val');
+    const targetVal = parseInt(stat.dataset.value, 10);
     if (!valEl || isNaN(targetVal)) return;
-    animateValue(valEl, 0, targetVal, 950, badge.dataset.type === 'roblox');
+    animateValue(valEl, 0, targetVal, 950, stat.dataset.type === 'roblox');
   });
 
   // 2. Fetch live GitHub stars directly
-  const ghBadges = document.querySelectorAll('.pc-badge[data-type="github"]');
-  ghBadges.forEach(async (badge) => {
-    const repo = badge.dataset.repo;
+  const ghStats = document.querySelectorAll('.pc-stat[data-type="github"]');
+  ghStats.forEach(async (stat) => {
+    const repo = stat.dataset.repo;
     if (!repo) return;
     try {
       const res = await fetch(`https://api.github.com/repos/${repo}`);
       if (res.ok) {
         const data = await res.json();
         const stars = data.stargazers_count;
-        const valEl = badge.querySelector('.live-val');
+        const valEl = stat.querySelector('.live-val');
         if (valEl && stars !== undefined) {
-          badge.dataset.value = stars;
+          stat.dataset.value = stars;
           valEl.textContent = stars.toLocaleString();
-          badge.setAttribute('title', `${stars} stars on GitHub • Live sync`);
+          stat.setAttribute('title', `${stars} stars on GitHub • Live sync`);
         }
       }
     } catch (e) {
@@ -128,8 +128,8 @@ async function updateLiveStats() {
   });
 
   // 3. Fetch live Roblox visits (via CORS proxy)
-  const robloxBadges = document.querySelectorAll('.pc-badge[data-type="roblox"]');
-  const universeIds = Array.from(robloxBadges).map(b => b.dataset.universe).filter(Boolean);
+  const robloxStats = document.querySelectorAll('.pc-stat[data-type="roblox"]');
+  const universeIds = Array.from(robloxStats).map(b => b.dataset.universe).filter(Boolean);
   
   if (universeIds.length > 0) {
     try {
@@ -140,12 +140,12 @@ async function updateLiveStats() {
         const json = await res.json();
         if (json && Array.isArray(json.data)) {
           json.data.forEach(game => {
-            const badge = document.querySelector(`.pc-badge[data-universe="${game.id}"]`);
-            if (badge && game.visits !== undefined) {
-              badge.dataset.value = game.visits;
-              const valEl = badge.querySelector('.live-val');
+            const stat = document.querySelector(`.pc-stat[data-universe="${game.id}"]`);
+            if (stat && game.visits !== undefined) {
+              stat.dataset.value = game.visits;
+              const valEl = stat.querySelector('.live-val');
               if (valEl) valEl.textContent = formatCount(game.visits);
-              badge.setAttribute('title', `${game.visits.toLocaleString()} total visits • Live sync`);
+              stat.setAttribute('title', `${game.visits.toLocaleString()} total visits • Live sync`);
             }
           });
         }

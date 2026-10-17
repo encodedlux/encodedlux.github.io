@@ -693,113 +693,65 @@ button {
   gap: 8px;
 }
 
-/* ─── LIVE POSTCARD BADGES ─── */
-.pc-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(14, 16, 22, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 5px 11px;
-  border-radius: 999px;
-  font-family: var(--body);
-  font-size: 0.78125rem;
-  font-weight: 700;
-  color: var(--text);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-  pointer-events: auto;
-  user-select: none;
-  transition: transform 0.25s var(--ease-out), border-color 0.2s, background 0.2s, box-shadow 0.25s;
-}
-
-.pc:hover .pc-badge {
-  border-color: rgba(255, 255, 255, 0.26);
-}
-
-.pc-badge:hover {
-  transform: translateY(-1px) scale(1.04);
-  background: var(--night-3);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
-}
-
-.live-val {
-  color: #ffffff;
-  font-weight: 800;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8125rem;
-  letter-spacing: -0.01em;
-}
-
-.live-label {
-  color: var(--muted);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-}
-
-/* Pulsing live dot for games */
-.live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10b981;
-  position: relative;
-  flex-shrink: 0;
-  display: inline-block;
-}
-
-.live-dot::after {
+/* ─── POSTCARD VISITS OVERLAY (BOTTOM LEFT) ─── */
+.pc-media::after {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 1.5px solid #10b981;
-  animation: livePing 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.22) 30%, transparent 55%);
+  transition: opacity 0.3s var(--ease-out);
 }
 
-@keyframes livePing {
-  0% { transform: scale(0.7); opacity: 0.9; }
-  75%, 100% { transform: scale(2.4); opacity: 0; }
+.pc-stat {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  z-index: 6;
+  color: #ffffff;
+  font-family: var(--body);
+  font-size: clamp(1.1875rem, 1.55vw, 1.4375rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+  text-shadow: 
+    0 1px 2px #000,
+    0 2px 6px rgba(0, 0, 0, 0.95),
+    0 0 14px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  user-select: none;
+  transition: transform 0.3s var(--ease-out);
 }
 
-/* GitHub Star Badge */
-.pc-badge--github {
-  border-color: color-mix(in srgb, #f59e0b 25%, var(--line));
+.pc:hover .pc-stat {
+  transform: translateY(-2px);
 }
 
-.pc-badge--github .star-icon {
-  width: 13px;
-  height: 13px;
-  color: #fbbf24;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.4));
-  transition: transform 0.3s var(--ease-spring);
+.pc-stat .stat-prefix {
+  font-weight: 900;
+  color: #ffffff;
 }
 
-.pc-badge--github:hover .star-icon {
-  transform: rotate(20deg) scale(1.15);
+.pc-stat .live-val {
+  font-weight: 900;
+  color: #ffffff;
 }
 
-/* Offline / Deleted Badge */
-.pc-badge--offline {
-  border-color: rgba(255, 255, 255, 0.08);
-  opacity: 0.85;
+.pc-stat .pc-stat-label {
+  font-size: inherit;
+  font-weight: 900;
+  color: #ffffff;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  margin-left: 0.28em;
 }
 
-.offline-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ef4444;
-  opacity: 0.8;
-  flex-shrink: 0;
+.pc-stat--offline {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
 }
 
 .pc-note {
