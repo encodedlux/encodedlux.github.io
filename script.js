@@ -77,9 +77,9 @@ function formatCount(num) {
   return num.toString();
 }
 
-function animateValue(stat, start, end, duration = 800, isSuffix = true) {
-  const valEl = stat.querySelector('.live-val');
-  const prefixEl = stat.querySelector('.stat-prefix');
+function animateValue(target, start, end, duration = 800, isSuffix = true) {
+  const valEl = target.querySelector ? (target.querySelector('.live-val') || target) : target;
+  const prefixEl = target.querySelector ? target.querySelector('.stat-prefix') : null;
   if (!valEl) return;
 
   if (prefixEl) {
@@ -103,6 +103,14 @@ function animateValue(stat, start, end, duration = 800, isSuffix = true) {
 }
 
 async function updateLiveStats() {
+  // Animate global stats strip
+  const globalStatValues = document.querySelectorAll('.stat-value[data-value]');
+  globalStatValues.forEach(el => {
+    const targetVal = parseInt(el.dataset.value, 10);
+    if (isNaN(targetVal)) return;
+    animateValue(el, 0, targetVal, 950, true);
+  });
+
   const stats = document.querySelectorAll('.pc-stat[data-type]');
   
   // 1. Initial animated counter on page load
