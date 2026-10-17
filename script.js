@@ -77,18 +77,26 @@ function formatCount(num) {
   return num.toString();
 }
 
-function animateValue(el, start, end, duration = 800, isSuffix = true) {
+function animateValue(stat, start, end, duration = 800, isSuffix = true) {
+  const valEl = stat.querySelector('.live-val');
+  const prefixEl = stat.querySelector('.stat-prefix');
+  if (!valEl) return;
+
+  if (prefixEl) {
+    prefixEl.textContent = end >= 1000 ? '+' : '';
+  }
+
   let startTimestamp = null;
   const step = (timestamp) => {
     if (!startTimestamp) startTimestamp = timestamp;
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
     const ease = 1 - Math.pow(1 - progress, 3);
     const current = Math.floor(ease * (end - start) + start);
-    el.textContent = isSuffix ? formatCount(current) : current.toLocaleString();
+    valEl.textContent = isSuffix ? formatCount(current) : current.toLocaleString();
     if (progress < 1) {
       window.requestAnimationFrame(step);
     } else {
-      el.textContent = isSuffix ? formatCount(end) : end.toLocaleString();
+      valEl.textContent = isSuffix ? formatCount(end) : end.toLocaleString();
     }
   };
   window.requestAnimationFrame(step);
@@ -99,10 +107,9 @@ async function updateLiveStats() {
   
   // 1. Initial animated counter on page load
   stats.forEach(stat => {
-    const valEl = stat.querySelector('.live-val');
     const targetVal = parseInt(stat.dataset.value, 10);
-    if (!valEl || isNaN(targetVal)) return;
-    animateValue(valEl, 0, targetVal, 950, stat.dataset.type === 'roblox');
+    if (isNaN(targetVal)) return;
+    animateValue(stat, 0, targetVal, 950, stat.dataset.type === 'roblox');
   });
 
   // 2. Fetch live GitHub stars directly
@@ -116,9 +123,11 @@ async function updateLiveStats() {
         const data = await res.json();
         const stars = data.stargazers_count;
         const valEl = stat.querySelector('.live-val');
+        const prefixEl = stat.querySelector('.stat-prefix');
         if (valEl && stars !== undefined) {
           stat.dataset.value = stars;
-          valEl.textContent = stars.toLocaleString();
+          if (prefixEl) prefixEl.textContent = stars >= 1000 ? '+' : '';
+          valEl.textContent = stars >= 1000 ? formatCount(stars) : stars.toLocaleString();
           stat.setAttribute('title', `${stars} stars on GitHub • Live sync`);
         }
       }
@@ -144,6 +153,8 @@ async function updateLiveStats() {
             if (stat && game.visits !== undefined) {
               stat.dataset.value = game.visits;
               const valEl = stat.querySelector('.live-val');
+              const prefixEl = stat.querySelector('.stat-prefix');
+              if (prefixEl) prefixEl.textContent = game.visits >= 1000 ? '+' : '';
               if (valEl) valEl.textContent = formatCount(game.visits);
               stat.setAttribute('title', `${game.visits.toLocaleString()} total visits • Live sync`);
             }
